@@ -1,0 +1,191 @@
+
+======================================================================
+Snap Inc. (Snapchat)  —  AI Deployment Strategy Report
+======================================================================
+  Generated : 2026-10-08  20:41:30
+  Course    : MSc Data Science  |  AI Business Case Study
+
+
+------------------------------------------------------------
+  1. Executive Summary
+------------------------------------------------------------
+  This report documents the design and automated evaluation of three
+  AI-driven initiatives for Snap Inc. (Snapchat). The use-cases span
+  product (AR Lens Recommendation), monetisation (Programmatic Ad
+  Targeting), and retention (User Churn Prediction). Each initiative
+  is backed by a machine-learning model trained on synthetic yet
+  realistic data, and quantified through an ROI framework grounded
+  in publicly disclosed Snap business metrics.
+
+
+------------------------------------------------------------
+  2. Company & Industry Context
+------------------------------------------------------------
+  Snap Inc. operates in the Social Media & Digital Advertising
+  industry. As of Q4 2024, Snapchat reported 422M DAU, \$5.4B annual
+  revenue, and a core product centred on AR-powered ephemeral
+  messaging. AI is central to Snap's strategy across: (a) generative
+  AR lens creation, (b) Snap AI chatbot, (c) personalised content
+  ranking, and (d) advertiser targeting. The three use-cases below
+  represent the highest-ROI opportunities across product and
+  monetisation.
+
+
+------------------------------------------------------------
+  3. Data Strategy
+------------------------------------------------------------
+  Three distinct datasets were synthesised to mirror Snapchat's
+  real-world data assets:
+
+  +-----------------------------------------------------------------+
+  |  Dataset            |  Rows   |  Features |  Target             |
+  +-----------------------------------------------------------------+
+  |  AR Lens            |  5,000  |  13       |  AR engagement (bin)|
+  |  Ad Targeting       |  8,000  |  12       |  Click-through (bin)|
+  |  User Churn         |  6,000  |  15       |  Churn (binary)     |
+  +-----------------------------------------------------------------+
+
+  Key data sources in a production deployment would include:
+  Snapchat app event logs (Kafka streams), Ads Manager auction data,
+  CRM/push notification logs, and third-party panel data. All data
+  processing would comply with GDPR, CCPA, and Snap's Privacy
+  Principles, with differential privacy applied where required.
+
+
+------------------------------------------------------------
+  4. Model Selection & Performance
+------------------------------------------------------------
+
+------------------------------------------------------------
+    4a. AR Lens Recommendation  —  Random Forest
+------------------------------------------------------------
+  Rationale: Random Forest provides interpretable feature
+  importances essential for product decisions (e.g. which lens
+  attributes drive engagement). It handles mixed feature types
+  natively and is robust to outliers.
+
+  Algorithm:                          Random Forest Classifier
+  n_estimators:                       200
+  Max depth:                          10  (prevents overfitting)
+  Class weighting:                    Balanced
+  CV ROC-AUC (5-fold):                0.5592
+  Test ROC-AUC:                       0.5956
+  Test Precision (class 1):           0.3578
+  Test Recall    (class 1):           0.5052
+  Test F1        (class 1):           0.4189
+
+
+------------------------------------------------------------
+    4b. Programmatic Ad Targeting  —  XGBoost
+------------------------------------------------------------
+  Rationale: XGBoost is the industry standard for click-through rate
+  modelling due to its ability to capture nonlinear interactions
+  between user segments, ad formats, and contextual signals (time-
+  of-day, placement). It scales to billions of impressions via
+  online learning extensions.
+
+  Algorithm:                          XGBoost Classifier
+  n_estimators:                       300
+  Learning rate:                      0.05  (shrinkage)
+  Imbalance handling:                 scale_pos_weight
+  CV ROC-AUC (5-fold):                0.5251
+  Test ROC-AUC:                       0.5620
+  Average Precision:                  0.0456
+  Test Precision (class 1):           0.0571
+  Test Recall    (class 1):           0.0333
+
+
+------------------------------------------------------------
+    4c. User Churn Prediction  —  XGBoost + SMOTE
+------------------------------------------------------------
+  Rationale: Churn datasets are inherently imbalanced (most users
+  are retained). SMOTE generates synthetic minority samples to
+  improve recall for at-risk users, which is the critical business
+  metric. Threshold tuning further optimises the F1 trade-off
+  between precision and recall.
+
+  Algorithm:                          XGBoost Classifier + SMOTE
+  Imbalance handling:                 SMOTE (k=5 neighbours)
+  Threshold tuning:                   F1-optimised sweep [0.1, 0.9]
+  Optimal threshold:                  0.45
+  CV ROC-AUC (5-fold):                0.9841
+  Test ROC-AUC:                       0.6451
+  Test Precision (class 1):           0.0992
+  Test Recall    (class 1):           0.2364
+  Test F1        (class 1):           0.1398
+
+
+------------------------------------------------------------
+  5. ROI Metrics
+------------------------------------------------------------
+  ROI estimates are derived from publicly available Snap financials
+  (Q4 2024 10-Q) and industry benchmarks. Revenue uplifts are
+  conservatively modelled as a function of model ROC-AUC relative to
+  a random baseline.
+
+
+  >> AR Lens Recommendation
+    Annual Revenue Gain:              $7,852,232
+    Annual Cost:                      $1,300,000
+    Net Benefit:                      $6,552,232
+    ROI:                              504.0%
+
+  >> Programmatic Ad Targeting
+    Annual Revenue Gain:              $84,293,506
+    Annual Cost:                      $1,300,000
+    Net Benefit:                      $82,993,506
+    ROI:                              6384.1%
+
+  >> User Churn Prediction
+    Annual Revenue Gain:              $29,684,247
+    Annual Cost:                      $6,087,782
+    Net Benefit:                      $23,596,465
+    ROI:                              387.6%
+
+  --- Consolidated -------------------------------------------
+    Total Annual Investment:          $8.69M
+    Total Annual Net Benefit:         $113.1M
+    Blended ROI:                      1202%
+
+
+------------------------------------------------------------
+  6. Deployment Architecture
+------------------------------------------------------------
+  Production deployment would follow a MLOps pipeline: (1) Feature
+  Store (Feast/Tecton) for real-time feature serving, (2) Model
+  Registry (MLflow) for versioning and A/B gating, (3) Serving layer
+  via FastAPI + Kubernetes for low-latency inference, (4) Shadow
+  mode deployment before full rollout, (5) Continuous monitoring
+  with Evidently AI for data drift, (6) Retraining triggers on KPI
+  degradation > 5% over 7-day window.
+
+
+------------------------------------------------------------
+  7. Ethical & Compliance Considerations
+------------------------------------------------------------
+  All three models are designed with fairness in mind: (a)
+  Demographic features are excluded from ad targeting to prevent
+  discriminatory ad delivery (per EU AI Act and UK ICO guidelines).
+  (b) Churn model outputs are gated through human review before any
+  win-back communication is sent to minors (13-17 age group). (c)
+  GDPR Article 22 compliance: users can opt out of automated
+  decision-making. (d) Model explainability reports (SHAP values)
+  are generated quarterly for internal audit.
+
+
+------------------------------------------------------------
+  8. Conclusion
+------------------------------------------------------------
+  The three AI initiatives collectively deliver an estimated blended
+  ROI of 1202%, with a total annual net benefit of \$113.1M against
+  an investment of \$8.69M. The highest individual ROI is from Ad
+  Targeting, which leverages Snap's existing impression scale. Churn
+  Prediction delivers the strongest strategic value by protecting
+  DAU — the metric most scrutinised by investors. AR Lens
+  Recommendation directly supports Snap's core product
+  differentiation.
+
+
+======================================================================
+END OF REPORT
+======================================================================

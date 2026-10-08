@@ -1,0 +1,4 @@
+Use Case,Model,ROC-AUC,Annual Revenue Gain ($),Annual Cost ($),Net Benefit ($),ROI (%)
+AR Lens Recommendation,Random Forest,0.5956131770156561,7852232.16,1300000.0,6552232.16,504.0
+Programmatic Ad Targeting,XGBoost,0.5619805194805195,84293506.49,1300000.0,82993506.49,6384.1
+User Churn Prediction,XGBoost + SMOTE,0.6450655021834061,29684247.27,6087781.82,23596465.45,387.6
